@@ -121,7 +121,11 @@ def k_means(point, n):
     cen_dict = {}                          # 先定好中心
     for i in range(n):
         name = 'center_' + str(i+1)                # 先随机吧
-        cen_dict[name] = np.array([[random.randint(0, 320), random.randint(0, 320)]])
+        min_x = int(min(point[:, 0]) * 1.1)
+        max_x = int(max(point[:, 0]) * 1.1)
+        min_y = int(min(point[:, 1]) * 1.1)
+        max_y = int(max(point[:, 1]) * 1.1)
+        cen_dict[name] = np.array([[random.randint(min_x, max_x), random.randint(min_y, max_y)]])
 
     for i in range(100):
         if shoulian(cen_dict):
@@ -129,6 +133,11 @@ def k_means(point, n):
         point_dict = apart(point, cen_dict)  # 按距离分类
         reset_cen(point_dict, cen_dict)  # 重新定中心
     draw(point_dict,cen_dict)
+
+
+def init_center(point,n):
+    min(point[:,0])
+
 
 k_means(point1,3)
 plt.pause(5)
