@@ -19,7 +19,7 @@ ran = 30   # 随机数在在中心30的距离
 p1 = nr.normal(100, ran, size=(2, num)).T
 p2 = nr.normal(200, ran, size=(2, num)).T
 np.set_printoptions(precision=4)    # 显示保留四位有效数字
-point = np.concatenate([p1, p2])   # 合并数据
+point1 = np.concatenate([p1, p2])   # 合并数据
 
 
 # 计算每个两点之间的距离平方
@@ -30,7 +30,7 @@ def distance_sq(p1, p2):
     return abs(x1-x2)**2+abs(y1-y2)**2
 
 
-def apart(point, cen_dict):
+def apart(point, cen_dict):    # 分类
     cens = []
     for key in cen_dict.keys():
         cens.append(cen_dict[key][-1])
@@ -38,14 +38,14 @@ def apart(point, cen_dict):
     num = 0
     for i in cens:
         num += 1
-        name = 'center' + str(num)
+        name = 'center_' + str(num)
         point_dict[name] = np.array([False])
     for p in point:
         dt = []
         for cen in cens:
             dt.append(distance_sq(p, cen))
         min_no = min_dt(dt)[0]
-        name = 'center' + str(min_no)
+        name = 'center_' + str(min_no)
         if point_dict[name].all():
             point_dict[name] = np.concatenate([point_dict[name], p])
         else:
@@ -54,6 +54,7 @@ def apart(point, cen_dict):
         if  point_dict[key].all():
             point_dict[key] = point_dict[key].reshape(-1, 2)
     return point_dict
+
 
 def min_dt(dt_list):
     num = 0
@@ -68,42 +69,41 @@ def min_dt(dt_list):
 
 
 def reset_cen(pdict, cdict):
-    sum_x1 = 0
-    sum_y1 = 0
-    sum_x2 = 0
-    sum_y2 = 0
-    for p1, p2 in zip_longest(pdict['A'], pdict['B'],  fillvalue=[0,0]):
-        sum_x1 += p1[0]
-        sum_y1 += p1[1]
-        sum_x2 += p2[0]
-        sum_y2 += p2[1]
-    n1 = pdict['A'].shape[0]
-    n2 = pdict['B'].shape[0]
-    cen1 = np.array([[sum_x1 / n1, sum_y1 / n1]])
-    cen2 = np.array([[sum_x2 / n2, sum_y2 / n2]])
-    cenp1 = np.concatenate([cenp1, cen1])
-    cenp2 = np.concatenate([cenp2, cen2])
-    return cenp1, cenp2
+    for key in pdict.keys():
+        sum_x = 0
+        sum_y = 0
+        for p_x, p_y in pdict[key]:
+            sum_x += p_x
+            sum_y += p_y
+        cen_x = sum_x / pdict[key].shape[0]
+        cen_y = sum_y / pdict[key].shape[0]
+        cen_new = np.array([[cen_x, cen_y]])
+        cdict[key] = np.concatenate([cdict[key], cen_new])
 
 
-def draw(point_dict,cen_p1,cen_p2):
-    # 以下是画散点图
+def draw(point_dict, cen_dict):
+    # 先用不同颜色画散点图
     plt.ion()  # 交互模式
     fig, ax = plt.subplots()
-    ax.plot(point_dict['A'][:, 0], point_dict['A'][:, 1], 'ro', color='m')  # 画随机的散点
-    ax.plot(point_dict['B'][:, 0], point_dict['B'][:, 1], 'ro', color='c')
+    color = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
+    color_n = 0
+    for key in point_dict.keys():
+        ax.plot(point_dict[key][:, 0], point_dict[key][:, 1], 'ro', color= color[color_n])  # 画随机的散点
+        color_n += 1
     ax.set_title('K-means')
+    color_n = 2
     plt.pause(0.1)
-
-    star = mpath.Path.unit_regular_star(6)  # 画出中心点的轨迹
+    # 再画出中心点移动的轨迹
+    star = mpath.Path.unit_regular_star(6)
     circle = mpath.Path.unit_circle()
     # concatenate the circle with an internal cutout of the star
     verts = np.concatenate([circle.vertices, star.vertices[::-1, ...]])
     codes = np.concatenate([circle.codes, star.codes])
     cut_star = mpath.Path(verts, codes)
 
-    ax.plot(cen_p1[:, 0], cen_p1[:, 1], '--r', marker=cut_star, markersize=10)  # 画两个中心点轨迹
-    ax.plot(cen_p2[:, 0], cen_p2[:, 1], '--r', marker=cut_star, markersize=10, color='b')
+    for key in cen_dict.keys():
+        ax.plot(cen_dict[key][:, 0], cen_dict[key][:, 1], '--r', marker=cut_star, markersize=10, color=color[color_n])  # 画两个中心点轨迹
+        color_n += 1
     plt.pause(0.1)
 
 
@@ -120,7 +120,7 @@ def shoulian(cen_dict):
 def k_means(point, n):
     cen_dict = {}                          # 先定好中心
     for i in range(n):
-        name = 'cen_' + str(i+1)                # 先随机吧
+        name = 'center_' + str(i+1)                # 先随机吧
         cen_dict[name] = np.array([[random.randint(0, 320), random.randint(0, 320)]])
 
     for i in range(100):
@@ -130,5 +130,5 @@ def k_means(point, n):
         reset_cen(point_dict, cen_dict)  # 重新定中心
     draw(point_dict,cen_dict)
 
-k_means(point,2)
-plt.pause(15)
+k_means(point1,3)
+plt.pause(5)
