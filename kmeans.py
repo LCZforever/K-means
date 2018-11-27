@@ -117,7 +117,7 @@ def shoulian(cen_dict):
     return num == 0
 
 
-def k_means(point, n):
+def k_means(point, n, draw_plot = True):
     cen_dict = {}                          # 先定好中心
     for i in range(n):
         name = 'center_' + str(i+1)                # 先随机吧
@@ -132,8 +132,9 @@ def k_means(point, n):
             break
         point_dict = apart(point, cen_dict)  # 按距离分类
         reset_cen(point_dict, cen_dict)  # 重新定中心
-    draw(point_dict,cen_dict)
-
+    if draw_plot:
+        draw(point_dict,cen_dict)
+    return point_dict,cen_dict
 
 def init_center(point,n):
     min(point[:,0])
